@@ -203,7 +203,7 @@ Summary (BATCH_SIZE=80, RTX 4090):
 
 I could not find an official explanation of the Chatterbox architecture, so below is my best explanation based on the codebase. Chatterbox broadly follows the [CosyVoice](https://funaudiollm.github.io/cosyvoice2/) architecture, applying intermediate fusion multimodal conditioning to a 0.5B parameter Llama model.
 
-*Chatterbox Architecture Diagram*
+![Chatterbox Architecture Diagram](docs/chatterbox-architecture.svg)
 
 # Implementation Notes
 
@@ -211,7 +211,7 @@ I could not find an official explanation of the Chatterbox architecture, so belo
 
 vLLM does not support CFG natively, so substantial hacks were needed to make it work. At a high level, we trick vLLM into thinking the model has double the hidden dimension size as it actually does, then splitting and restacking the states to invoke Llama with double the original batch size. This does pose a risk that vLLM will underestimate the memory requirements of the model - more research is needed into whether vLLM's initial profiling pass will capture this nuance.
 
-*vLLM CFG Implementation*
+![vLLM CFG Implementation](docs/vllm-cfg-impl.svg)
 
 # Changelog
 
