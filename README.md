@@ -164,6 +164,7 @@ Processed prompts: 100%|█| 154/154 [00:38<00:00,  3.98it/s, est. speed input: 
 
 Summary (BATCH_SIZE=80, RTX 4090):
 
+## Chatterbox Turbo VLLM (RTX4090)
 
 | Metric                       | Value                   |
 | ---------------------------- | ----------------------- |
