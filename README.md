@@ -92,27 +92,6 @@ if __name__ == "__main__":
             ta.save(f"test-{i}-{audio_idx}.mp3", audio, model.sr)
 ```
 
-# Tuning `max_batch_size`
-
-The `max_batch_size` parameter controls how much GPU memory is allocated to vLLM for the T3 speech token model. The GPU is shared between two models — **T3** (runs inside vLLM) and **S3Gen** (the waveform decoder, runs outside vLLM) — so this value determines the memory split between them.
-
-A higher `max_batch_size` gives vLLM more memory, which improves T3 inference speed and allows more concurrent requests. But setting it too high will leave insufficient memory for S3Gen, causing OOM errors.
-
-**Recommended values by VRAM:**
-
-| VRAM | `max_batch_size` |
-|---|---|
-| 8 GB | 15 |
-| 16 GB | 40 |
-| 24 GB | 80 |
-
-**Files to adjust:**
-
-- `benchmark.py` — for benchmarking throughput
-- `example-tts.py` — basic generation example
-- `example-tts-min-vram.py` — minimal VRAM example (uses lower values)
-- `gradio_tts_app.py` — Gradio web UI
-
 # Benchmarks
 
 To run a benchmark, tweak and run `benchmark.py`.  
@@ -213,52 +192,4 @@ vLLM does not support CFG natively, so substantial hacks were needed to make it 
 
 ![vLLM CFG Implementation](docs/vllm-cfg-impl.svg)
 
-# Changelog
-
-## `0.2.1`
-
-- Updated to multilingual v2
-
-## `0.2.0`
-
-- Initial multilingual support.
-
-## `0.1.5`
-
-- Fix Python packaging missing the tokenizer.json file
-
-## `0.1.4`
-
-- Change default step count back to 10 due to feedback about quality degradation.
-- Fixed a bug in the `gradio_tts_app.py` implementation (#13).
-- Fixed a bug with how symlinks don't work if the module is installed normally (vs as a dev environment) (#12).
-  - The whole structure of how this project should be integrated into downstream repos is something that needs rethinking.
-
-## `0.1.3`
-
-- Added ability to tweak S3Gen diffusion steps, and default it to 5 (originally 10). This improves performance with nearly indistinguishable quality loss.
-
-## `0.1.2`
-
-- Update to `vllm 0.10.0`
-- Fixed error where batched requests sometimes get truncated, or otherwise jumbled.
-  - This also removes the need to double-apply batching when submitting requests. You can submit as many prompts as you'd like into the `generate` function, and `vllm` should perform the batching internally without issue. See changes to `benchmark.py` for details.
-  - There is still a (very rare, theoretical) possibility that this issue can still happen. If it does, submit a ticket with repro steps, and tweak your max batch size or max token count as a workaround.
-
-## `0.1.1`
-
-- Misc minor cleanups
-- API changes:
-  - Use `max_batch_size` instead of `gpu_memory_utilization`
-  - Use `compile=False` (default) instead of `enforce_eager=True`
-  - Look at the latest examples to follow API changes. As a reminder, I do not expect the API to become stable until `1.0.0`.
-
-## `0.1.0`
-
-- Initial publication to pypi
-- Moved audio conditioning processing out of vLLM to avoid re-computing it for every request.
-
-## `0.0.1`
-
-- Initial release
-
+#
