@@ -1,55 +1,50 @@
-# Chatterbox TTS on vLLM
+# Chatterbox Turbo TTS on vLLM
 
-This is a port of https://github.com/resemble-ai/chatterbox to vLLM. Why?
+> **IMPORTANT:** This project is a port of [Chatterbox Turbo](https://github.com/resemble-ai/chatterbox) to vLLM, built on top of the excellent [chatterbox-vllm](https://github.com/randombk/chatterbox-vllm) by [@randombk](https://github.com/randombk). The original chatterbox-vllm project ported the standard Chatterbox model to vLLM — this repo extends that work to support the newer **Chatterbox Turbo** model, which features a significantly faster S3Gen waveform decoder.
 
-* Improved performance and more efficient use of GPU memory.
-  * Early benchmarks show ~4x speedup in generation tokens/s without batching, and over 10x with batching. This is a significant improvement over the original Chatterbox implementation, which was bottlenecked by unnecessary CPU-GPU sync/transfers within the HF transformers implementation.
-  * More rigorous benchmarking is WIP, but will likely come after batching is fully fleshed out.
-* Easier integration with state-of-the-art inference infrastructure.
+- Improved performance and more efficient use of GPU memory.
+- Easier integration with state-of-the-art inference infrastructure.
 
 DISCLAIMER: THIS IS A PERSONAL PROJECT and is not affiliated with my employer or any other corporate entity in any way. The project is based solely on publicly-available information. All opinions are my own and do not necessarily represent the views of my employer.
 
-## Generation Samples
+## Chatterbox VLLM vs Turbo VLLM (RTX 4090, BATCH_SIZE=80)
 
-![Sample 1](docs/audio-sample-01.mp3)
-<audio controls>
-  <source src="docs/audio-sample-01.mp3" type="audio/mp3">
-</audio>
 
-![Sample 2](docs/audio-sample-02.mp3)
-<audio controls>
-  <source src="docs/audio-sample-02.mp3" type="audio/mp3">
-</audio>
-
-![Sample 3](docs/audio-sample-03.mp3)
-<audio controls>
-  <source src="docs/audio-sample-03.mp3" type="audio/mp3">
-</audio>
+| Metric                       | Regular             | Turbo               | Speedup  |
+| ---------------------------- | ------------------- | ------------------- | -------- |
+| Audio duration               | 39.9 min            | 38.5 min            | —        |
+| Model load                   | 27.3s               | 21.4s               | 1.3x     |
+| **Generation**               | **103.1s**          | **61.3s**           | **1.7x** |
+| — T3 speech token generation | 31.6s               | 39.9s               | 0.8x     |
+| — S3Gen waveform generation  | 70.4s               | 20.2s               | 3.5x     |
+| End-to-end total             | 131.1s              | 83.3s               | 1.6x     |
+| **Generation RTF**           | **23.2x real-time** | **37.6x real-time** | **1.6x** |
+| **End-to-end RTF**           | **18.3x real-time** | **27.7x real-time** | **1.5x** |
 
 
 # Project Status: Usable and with Benchmark-Topping Throughput
 
-* ✅ Basic speech cloning with audio and text conditioning.
-* ✅ Outputs match the quality of the original Chatterbox implementation.
-* ✅ Context Free Guidance (CFG) is implemented.
-  * Due to a vLLM limitation, CFG can not be tuned on a per-request basis and can only be configured via the `CHATTERBOX_CFG_SCALE` environment variable.
-* ✅ Exaggeration control is implemented.
-* ✅ vLLM batching is implemented and produces a significant speedup.
-* ℹ️ Project uses vLLM internal APIs and extremely hacky workarounds to get things done.
-  * Refactoring to the idiomatic vLLM way of doing things is WIP, but will require some changes to vLLM.
-  * Until then, this is a Rube Goldberg machine that will likely only work with vLLM 0.9.2.
-  * Follow https://github.com/vllm-project/vllm/issues/21989 for updates.
-* ℹ️ Substantial refactoring is needed to further clean up unnecessary workarounds and code paths.
-* ℹ️ Server API is not implemented and will likely be out-of-scope for this project.
-* ❌ Learned speech positional embeddings are not applied, pending support in vLLM. However, this doesn't seem to be causing a very noticeable degradation in quality.
-* ❌ APIs are not yet stable and may change.
-* ❌ Benchmarks and performance optimizations are not yet implemented.
+- ✅ Basic speech cloning with audio and text conditioning.
+- ✅ Outputs match the quality of the original Chatterbox implementation.
+- ✅ Context Free Guidance (CFG) is implemented.
+  - Due to a vLLM limitation, CFG can not be tuned on a per-request basis and can only be configured via the `CHATTERBOX_CFG_SCALE` environment variable.
+- ✅ Exaggeration control is implemented.
+- ✅ vLLM batching is implemented and produces a significant speedup.
+- ℹ️ Project uses vLLM internal APIs and extremely hacky workarounds to get things done.
+  - Refactoring to the idiomatic vLLM way of doing things is WIP, but will require some changes to vLLM.
+  - Until then, this is a Rube Goldberg machine that will likely only work with vLLM 0.9.2.
+  - Follow [https://github.com/vllm-project/vllm/issues/21989](https://github.com/vllm-project/vllm/issues/21989) for updates.
+- ℹ️ Substantial refactoring is needed to further clean up unnecessary workarounds and code paths.
+- ℹ️ Server API is not implemented and will likely be out-of-scope for this project.
+- ❌ Learned speech positional embeddings are not applied, pending support in vLLM. However, this doesn't seem to be causing a very noticeable degradation in quality.
+- ❌ APIs are not yet stable and may change.
+- ❌ Benchmarks and performance optimizations are not yet implemented.
 
 # Installation
 
-This project only supports Linux and WSL2 with Nvidia hardware. AMD _may_ work with minor tweaks, but is not tested.
+This project only supports Linux and WSL2 with Nvidia hardware. AMD *may* work with minor tweaks, but is not tested.
 
-Prerequisites: `git` and [`uv`](https://pypi.org/project/uv/) must be installed
+Prerequisites: `git` and `[uv](https://pypi.org/project/uv/)` must be installed
 
 ```
 git clone https://github.com/randombk/chatterbox-vllm.git
@@ -62,7 +57,6 @@ uv sync
 The package should automatically download the correct model weights from the Hugging Face Hub.
 
 If you encounter CUDA issues, try resetting the venv and using `uv pip install -e .` instead of `uv sync`.
-
 
 # Updating
 
@@ -98,138 +92,97 @@ if __name__ == "__main__":
             ta.save(f"test-{i}-{audio_idx}.mp3", audio, model.sr)
 ```
 
-# Multilingual
-
-An early version of Multilingual support is available (see [this example](https://github.com/randombk/chatterbox-vllm/blob/master/example-tts-multilingual.py)). However there *are* quality degradations compared to the original model, driven by:
-* Alignment Stream Analyzer is not implemented, which can result in errors, repetitions, and extra noise at the end of the audio snippet.
-* The lack of learned speech positional encodings is also much more noticible.
-* Russian text stress is not yet implemented.
-
-For the list of supported languages, see [here](https://github.com/resemble-ai/chatterbox?tab=readme-ov-file#supported-languages).
-
 # Benchmarks
 
-To run a benchmark, tweak and run `benchmark.py`.
+To run a benchmark, tweak and run `benchmark.py`.  
 The following results were obtained with batching on a 6.6k-word input (`docs/benchmark-text-1.txt`), generating ~40min of audio.
 
-Notes:
- * I'm not _entirely_ sure what the tokens/s figures from vLLM are showing - the figures probably aren't directly comparable to others, but the results speak for themselves.
- * With vLLM, **the T3 model is no longer the bottleneck**
-   * Vast majority of time is now spent on the S3Gen model, which is not ported/portable to vLLM. This currently uses the original reference implementation from the Chatterbox repo, so there's potential for integrating some of the other community optimizations here.
-   * This also means the vLLM section of the model never fully ramps to its peak throughput in these benchmarks.
- * Benchmarks are done without CUDA graphs, as that is currently causing correctness issues.
- * There are some issues with my very rudimentary chunking logic, which is causing some occasional artifacts in output quality.
-
-## Run 1: RTX 3090
-
-**Results using v0.1.3**
+## Benchmark: RTX 4090
 
 System Specs:
- * RTX 3090: 24GB VRAM
- * AMD Ryzen 9 7900X @ 5.70GHz
- * 128GB DDR5 4800 MT/s
+
+- RTX 4090: 24GB VRAM (Rented on RunPod)
+- 6 vCPU
+- 41 GB RAM
 
 Settings & Results:
-* Input text: `docs/benchmark-text-1.txt` (6.6k words)
-* Input audio: `docs/audio-sample-03.mp3`
-* Exaggeration: 0.5, CFG: 0.5, Temperature: 0.8
-* CUDA graphs disabled, vLLM max memory utilization=0.6
-* Generated output length: 39m54s
-* Wall time: 1m33s (including model load and application init)
-* Generation time (without model startup time): 87s
-  * Time spent in T3 Llama token generation: 13.3s
-  * Time spent in S3Gen waveform generation: 60.8s
+
+- Input text: `docs/benchmark-text-1.txt` (6.6k words, 154 chunks)
+- Input audio: `docs/audio-sample-03.mp3`
+- Batch size: 80, Diffusion steps: 2, Temperature: 0.8
+- CUDA graphs disabled
+- Generated output length: 38m29s
+- Wall time: 1m23s
+- Generation time (without model startup time): 61.3s
+  - Time spent in T3 speech token generation: 39.9s
+  - Time spent in S3Gen waveform generation: 20.2s
 
 Logs:
+
 ```
 [BENCHMARK] Text chunked into 154 chunks
-Giving vLLM 56.48% of GPU memory (13587.20 MB)
-[config.py:1472] Using max model len 1200
-[default_loader.py:272] Loading weights took 0.14 seconds
-[gpu_model_runner.py:1801] Model loading took 1.0179 GiB and 0.198331 seconds
-[gpu_model_runner.py:2238] Encoder cache will be initialized with a budget of 8192 tokens, and profiled with 178 conditionals items of the maximum feature size.
-[gpu_worker.py:232] Available KV cache memory: 11.78 GiB
-[kv_cache_utils.py:716] GPU KV cache size: 102,880 tokens
-[kv_cache_utils.py:720] Maximum concurrency for 1,200 tokens per request: 85.73x
-[BENCHMARK] Model loaded in 7.499186038970947 seconds
-Adding requests: 100%|██████| 154/154 [00:00<00:00, 1105.84it/s]
-Processed prompts: 100%|█████| 154/154 [00:13<00:00, 11.75it/s, est. speed input: 2193.47 toks/s, output: 4577.88 toks/s]
-[T3] Speech Token Generation time: 13.25s
-[S3Gen] Wavform Generation time: 60.85s
-[BENCHMARK] Generation completed in 74.89441227912903 seconds
-[BENCHMARK] Audio saved to benchmark.mp3
-[BENCHMARK] Total time: 87.40947437286377 seconds
+Fetching 10 files: 100%|████████████████████████████| 10/10 [00:00<00:00, 59158.03it/s]
+Giving vLLM 54.97% of GPU memory (13228.80 MB)
+`torch_dtype` is deprecated! Use `dtype` instead!
+INFO 03-27 22:26:07 [config.py:1604] Using max model len 1200
+INFO 03-27 22:26:08 [config.py:2434] Chunked prefill is enabled with max_num_batched_tokens=8192.
+WARNING 03-27 22:26:08 [__init__.py:2899] We must use the `spawn` multiprocessing start method. Overriding VLLM_WORKER_MULTIPROC_METHOD to 'spawn'. See https://docs.vllm.ai/en/latest/usage/troubleshooting.html#python-multiprocessing for more information. Reason: CUDA is initialized
+INFO 03-27 22:26:13 [__init__.py:235] Automatically detected platform cuda.
+INFO 03-27 22:26:17 [core.py:572] Waiting for init message from front-end.
+INFO 03-27 22:26:17 [core.py:71] Initializing a V1 LLM engine (v0.10.0) with config: model='./t3-model-turbo', speculative_config=None, tokenizer='./t3-model-turbo', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, override_neuron_config={}, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=1200, download_dir=None, load_format=LoadFormat.AUTO, tensor_parallel_size=1, pipeline_parallel_size=1, disable_custom_all_reduce=False, quantization=None, enforce_eager=True, kv_cache_dtype=auto,  device_config=cuda, decoding_config=DecodingConfig(backend='auto', disable_fallback=False, disable_any_whitespace=False, disable_additional_properties=False, reasoning_backend=''), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None), seed=0, served_model_name=./t3-model-turbo, num_scheduler_steps=1, multi_step_stream_outputs=True, enable_prefix_caching=True, chunked_prefill_enabled=True, use_async_output_proc=True, pooler_config=None, compilation_config={"level":0,"debug_dump_path":"","cache_dir":"","backend":"","custom_ops":[],"splitting_ops":[],"use_inductor":true,"compile_sizes":[],"inductor_compile_config":{"enable_auto_functionalized_v2":false},"inductor_passes":{},"use_cudagraph":true,"cudagraph_num_of_warmups":0,"cudagraph_capture_sizes":[],"cudagraph_copy_inputs":false,"full_cuda_graph":false,"max_capture_size":0,"local_cache_dir":null}
+INFO 03-27 22:26:17 [parallel_state.py:1102] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, TP rank 0, EP rank 0
+WARNING 03-27 22:26:17 [topk_topp_sampler.py:59] FlashInfer is not available. Falling back to the PyTorch-native implementation of top-p & top-k sampling. For the best performance, please install FlashInfer.
+INFO 03-27 22:26:17 [gpu_model_runner.py:1843] Starting to load model ./t3-model-turbo...
+INFO 03-27 22:26:18 [gpu_model_runner.py:1875] Loading model from scratch...
+INFO 03-27 22:26:18 [cuda.py:290] Using Flash Attention backend on V1 engine.
+Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:00<00:00, 112.10it/s]
 
-real	1m33.458s
-user	2m21.452s
-sys	0m2.362s
+INFO 03-27 22:26:21 [default_loader.py:262] Loading weights took 3.02 seconds
+INFO 03-27 22:26:21 [gpu_model_runner.py:1892] Model loading took 0.7002 GiB and 3.055451 seconds
+INFO 03-27 22:26:21 [gpu_model_runner.py:2380] Encoder cache will be initialized with a budget of 8192 tokens, and profiled with 21 conditionals items of the maximum feature size.
+INFO 03-27 22:26:22 [gpu_worker.py:255] Available KV cache memory: 11.67 GiB
+INFO 03-27 22:26:22 [kv_cache_utils.py:833] GPU KV cache size: 127,472 tokens
+INFO 03-27 22:26:22 [kv_cache_utils.py:837] Maximum concurrency for 1,200 tokens per request: 106.23x
+INFO 03-27 22:26:23 [core.py:193] init engine (profile, create kv cache, warmup model) took 1.29 seconds
+/usr/local/lib/python3.11/dist-packages/diffusers/models/lora.py:391: FutureWarning: `LoRACompatibleLinear` is deprecated and will be removed in version 1.0.0. Use of `LoRACompatibleLinear` is deprecated. Please switch to PEFT backend by installing PEFT: `pip install peft`.
+  deprecate("LoRACompatibleLinear", "1.0.0", deprecation_message)
+[BENCHMARK] Model loaded in 21.357989072799683 seconds
+Adding requests: 100%|████████████████████████████████████| 154/154 [00:01<00:00, 124.94it/s]
+Processed prompts: 100%|█| 154/154 [00:38<00:00,  3.98it/s, est. speed input: 1718.66 toks/s,
+[T3] Speech Token Generation time: 39.94s
+[S3] Processing prompt 0 of 154
+[S3] Processing prompt 5 of 154
+...
+[S3] Processing prompt 150 of 154
+[S3Gen] Waveform Generation time: 20.23s
+[BENCHMARK] Generation completed in 61.34 seconds
+[BENCHMARK] Audio duration: 2308.88 seconds (38.5 min)
+[BENCHMARK] Generation RTF: 37.6x real-time
+[BENCHMARK] Total time: 83.26320457458496 seconds
 ```
 
+Summary (BATCH_SIZE=80, RTX 4090):
 
-## Run 2: RTX 3060ti
 
-**Results outdated; using v0.1.0**
-
-System Specs:
- * RTX 3060ti: 8GB VRAM
- * Intel i7-7700K @ 4.20GHz
- * 32GB DDR4 2133 MT/s
-
-Settings & Results:
-* Input text: `docs/benchmark-text-1.txt` (6.6k words)
-* Input audio: `docs/audio-sample-03.mp3`
-* Exaggeration: 0.5, CFG: 0.5, Temperature: 0.8
-* CUDA graphs disabled, vLLM max memory utilization=0.6
-* Generated output length: 40m15s
-* Wall time: 4m26s
-* Generation time (without model startup time): 238s
-  * Time spent in T3 Llama token generation: 36.4s
-  * Time spent in S3Gen waveform generation: 201s
-
-Logs:
-```
-[BENCHMARK] Text chunked into 154 chunks.
-INFO [config.py:1472] Using max model len 1200
-INFO [default_loader.py:272] Loading weights took 0.39 seconds
-INFO [gpu_model_runner.py:1801] Model loading took 1.0107 GiB and 0.497231 seconds
-INFO [gpu_model_runner.py:2238] Encoder cache will be initialized with a budget of 8192 tokens, and profiled with 241 conditionals items of the maximum feature size.
-INFO [gpu_worker.py:232] Available KV cache memory: 3.07 GiB
-INFO [kv_cache_utils.py:716] GPU KV cache size: 26,816 tokens
-INFO [kv_cache_utils.py:720] Maximum concurrency for 1,200 tokens per request: 22.35x
-Adding requests: 100%|████| 40/40 [00:00<00:00, 947.42it/s]
-Processed prompts: 100%|████| 40/40 [00:09<00:00,  4.15it/s, est. speed input: 799.18 toks/s, output: 1654.94 toks/s]
-[T3] Speech Token Generation time: 9.68s
-[S3Gen] Wavform Generation time: 53.66s
-Adding requests: 100%|████| 40/40 [00:00<00:00, 858.75it/s]
-Processed prompts: 100%|████| 40/40 [00:08<00:00,  4.69it/s, est. speed input: 938.19 toks/s, output: 1874.97 toks/s]
-[T3] Speech Token Generation time: 8.58s
-[S3Gen] Wavform Generation time: 53.86s
-Adding requests: 100%|████| 40/40 [00:00<00:00, 815.60it/s]
-Processed prompts: 100%|████| 40/40 [00:09<00:00,  4.19it/s, est. speed input: 726.62 toks/s, output: 1531.24 toks/s]
-[T3] Speech Token Generation time: 9.60s
-[S3Gen] Wavform Generation time: 49.89s
-Adding requests: 100%|████| 34/34 [00:00<00:00, 938.61it/s]
-Processed prompts: 100%|████| 34/34 [00:08<00:00,  3.98it/s, est. speed input: 714.68 toks/s, output: 1439.42 toks/s]
-[T3] Speech Token Generation time: 8.59s
-[S3Gen] Wavform Generation time: 43.58s
-[BENCHMARK] Generation completed in 238.42230987548828 seconds
-[BENCHMARK] Audio saved to benchmark.mp3
-[BENCHMARK] Total time: 259.1808190345764 seconds
-
-real    4m26.803s
-user    4m42.393s
-sys     0m4.285s
-```
+| Metric                       | Value                   |
+| ---------------------------- | ----------------------- |
+| Input text                   | 6.6k words (154 chunks) |
+| Generated audio              | 38.5 min                |
+| Model load                   | 21.4s                   |
+| Generation time              | 61.3s                   |
+| — T3 speech token generation | 39.9s                   |
+| — S3Gen waveform generation  | 20.2s                   |
+| **Generation RTF**           | **37.6x real-time**     |
+| End-to-end total             | 83.3s                   |
+| **End-to-end RTF**           | **27.7x real-time**     |
 
 
 # Chatterbox Architecture
 
 I could not find an official explanation of the Chatterbox architecture, so below is my best explanation based on the codebase. Chatterbox broadly follows the [CosyVoice](https://funaudiollm.github.io/cosyvoice2/) architecture, applying intermediate fusion multimodal conditioning to a 0.5B parameter Llama model.
 
-<div align="center">
-  <img src="https://github.com/randombk/chatterbox-vllm/raw/refs/heads/master/docs/chatterbox-architecture.svg" alt="Chatterbox Architecture" width="100%" />
-  <p><em>Chatterbox Architecture Diagram</em></p>
-</div>
+*Chatterbox Architecture Diagram*
 
 # Implementation Notes
 
@@ -237,49 +190,54 @@ I could not find an official explanation of the Chatterbox architecture, so belo
 
 vLLM does not support CFG natively, so substantial hacks were needed to make it work. At a high level, we trick vLLM into thinking the model has double the hidden dimension size as it actually does, then splitting and restacking the states to invoke Llama with double the original batch size. This does pose a risk that vLLM will underestimate the memory requirements of the model - more research is needed into whether vLLM's initial profiling pass will capture this nuance.
 
-
-<div align="center">
-  <img src="https://github.com/randombk/chatterbox-vllm/raw/refs/heads/master/docs/vllm-cfg-impl.svg" alt="vLLM CFG Implementation" width="100%" />
-  <p><em>vLLM CFG Implementation</em></p>
-</div>
+*vLLM CFG Implementation*
 
 # Changelog
 
 ## `0.2.1`
-* Updated to multilingual v2
+
+- Updated to multilingual v2
 
 ## `0.2.0`
-* Initial multilingual support.
+
+- Initial multilingual support.
 
 ## `0.1.5`
-* Fix Python packaging missing the tokenizer.json file
+
+- Fix Python packaging missing the tokenizer.json file
 
 ## `0.1.4`
-* Change default step count back to 10 due to feedback about quality degradation.
-* Fixed a bug in the `gradio_tts_app.py` implementation (#13).
-* Fixed a bug with how symlinks don't work if the module is installed normally (vs as a dev environment) (#12).
-  * The whole structure of how this project should be integrated into downstream repos is something that needs rethinking.
+
+- Change default step count back to 10 due to feedback about quality degradation.
+- Fixed a bug in the `gradio_tts_app.py` implementation (#13).
+- Fixed a bug with how symlinks don't work if the module is installed normally (vs as a dev environment) (#12).
+  - The whole structure of how this project should be integrated into downstream repos is something that needs rethinking.
 
 ## `0.1.3`
-* Added ability to tweak S3Gen diffusion steps, and default it to 5 (originally 10). This improves performance with nearly indistinguishable quality loss.
+
+- Added ability to tweak S3Gen diffusion steps, and default it to 5 (originally 10). This improves performance with nearly indistinguishable quality loss.
 
 ## `0.1.2`
-* Update to `vllm 0.10.0`
-* Fixed error where batched requests sometimes get truncated, or otherwise jumbled.
-  * This also removes the need to double-apply batching when submitting requests. You can submit as many prompts as you'd like into the `generate` function, and `vllm` should perform the batching internally without issue. See changes to `benchmark.py` for details.
-  * There is still a (very rare, theoretical) possibility that this issue can still happen. If it does, submit a ticket with repro steps, and tweak your max batch size or max token count as a workaround.
 
+- Update to `vllm 0.10.0`
+- Fixed error where batched requests sometimes get truncated, or otherwise jumbled.
+  - This also removes the need to double-apply batching when submitting requests. You can submit as many prompts as you'd like into the `generate` function, and `vllm` should perform the batching internally without issue. See changes to `benchmark.py` for details.
+  - There is still a (very rare, theoretical) possibility that this issue can still happen. If it does, submit a ticket with repro steps, and tweak your max batch size or max token count as a workaround.
 
 ## `0.1.1`
-* Misc minor cleanups
-* API changes:
-  * Use `max_batch_size` instead of `gpu_memory_utilization`
-  * Use `compile=False` (default) instead of `enforce_eager=True`
-  * Look at the latest examples to follow API changes. As a reminder, I do not expect the API to become stable until `1.0.0`.
+
+- Misc minor cleanups
+- API changes:
+  - Use `max_batch_size` instead of `gpu_memory_utilization`
+  - Use `compile=False` (default) instead of `enforce_eager=True`
+  - Look at the latest examples to follow API changes. As a reminder, I do not expect the API to become stable until `1.0.0`.
 
 ## `0.1.0`
-* Initial publication to pypi
-* Moved audio conditioning processing out of vLLM to avoid re-computing it for every request.
+
+- Initial publication to pypi
+- Moved audio conditioning processing out of vLLM to avoid re-computing it for every request.
 
 ## `0.0.1`
-* Initial release
+
+- Initial release
+

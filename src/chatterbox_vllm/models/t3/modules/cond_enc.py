@@ -4,7 +4,6 @@ from typing import Optional
 import torch
 from torch import nn, Tensor
 
-from .perceiver import Perceiver
 from .t3_config import T3Config
 
 
@@ -75,6 +74,7 @@ class T3CondEnc(nn.Module):
         # perceiver resampler
         self.perceiver = None
         if hp.use_perceiver_resampler:
+            from .perceiver import Perceiver
             self.perceiver = Perceiver()
 
     def forward(self, cond: T3Cond):

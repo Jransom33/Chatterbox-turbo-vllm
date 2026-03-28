@@ -18,7 +18,7 @@ MAX_CHUNK_SIZE = 400 # characters
 #   40 seems to work for 16GB VRAM
 #   80 seems to work for 24GB VRAM
 # You may need to adjust the batch size based on your GPU memory.
-BATCH_SIZE = 15
+BATCH_SIZE = 80
 
 
 # Given a line of text, split it into chunks of at most MAX_CHUNK_SIZE characters
@@ -82,19 +82,25 @@ if __name__ == "__main__":
     audios = model.generate(
         text,
         audio_prompt_path=AUDIO_PROMPT_PATH,
-        exaggeration=0.5,
+        diffusion_steps=2,
 
         # Supports anything in https://docs.vllm.ai/en/v0.9.2/api/vllm/index.html?h=samplingparams#vllm.SamplingParams
-        min_p=0.1,
-        top_p=0.8,
+        top_p=0.95,
+        top_k=1000,
+        repetition_penalty=1.2,
     )
     generation_time = time.time()
-    print(f"[BENCHMARK] Generation completed in {generation_time - model_load_time} seconds")
-
     # Stitch audio chunks together
     full_audio = torch.cat(audios, dim=-1)
-    ta.save(f"benchmark.mp3", full_audio, model.sr)
-    print(f"[BENCHMARK] Audio saved to benchmark.mp3")
+    gen_duration = generation_time - model_load_time
+    audio_duration = full_audio.shape[-1] / model.sr
+    rtf = audio_duration / gen_duration
+    print(f"[BENCHMARK] Generation completed in {gen_duration:.2f} seconds")
+    print(f"[BENCHMARK] Audio duration: {audio_duration:.2f} seconds ({audio_duration/60:.1f} min)")
+    print(f"[BENCHMARK] Generation RTF: {rtf:.1f}x real-time")
     print(f"[BENCHMARK] Total time: {time.time() - start_time} seconds")
 
     model.shutdown()
+
+    ta.save(f"benchmark.mp3", full_audio, model.sr)
+    print(f"[BENCHMARK] Audio saved to benchmark.mp3")

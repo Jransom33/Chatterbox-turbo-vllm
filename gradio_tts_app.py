@@ -27,18 +27,15 @@ def load_model():
     print("Loading model...")
     global global_model
     global_model = ChatterboxTTS.from_pretrained(
-        gpu_memory_utilization = 0.6,
+        # **Update max_batch_size to account for the amount of vram you have. (keep lower value (such as 10) if you have less vram like 8gb). Increase to improve speed for environments with more vram.
+        max_batch_size = 15,
         max_model_len = 1000,
-
-        # Disable CUDA graphs - it's causing tensors to get corrupted right now.
-        enforce_eager = True,
     )
     return global_model
 
-def generate(text, audio_prompt_path, exaggeration, temperature, seed_num,
-             #cfgw,
+def generate(text, audio_prompt_path, temperature, seed_num,
              diffusion_steps,
-             min_p, top_p, repetition_penalty):
+             top_k, top_p, repetition_penalty):
     if seed_num != 0:
         set_seed(int(seed_num))
 
@@ -46,19 +43,16 @@ def generate(text, audio_prompt_path, exaggeration, temperature, seed_num,
     print(f"Using audio_prompt_path: {audio_prompt_path}")
     print(f"Using seed: {config_seed}")
     print(f"Using temperature: {temperature}")
-    print(f"Using exaggeration: {exaggeration}")
-    print(f"Using min_p: {min_p}")
+    print(f"Using top_k: {top_k}")
     print(f"Using top_p: {top_p}")
     print(f"Using repetition_penalty: {repetition_penalty}")
 
     wav = global_model.generate(
         [text],
         audio_prompt_path=audio_prompt_path,
-        exaggeration=exaggeration,
         temperature=temperature,
-        # cfg_weight=cfgw,
         diffusion_steps=diffusion_steps,
-        min_p=min_p,
+        top_k=top_k,
         top_p=top_p,
         repetition_penalty=repetition_penalty,
         seed=config_seed,
@@ -75,15 +69,13 @@ with gr.Blocks() as demo:
                 max_lines=5
             )
             ref_wav = gr.Audio(sources=["upload", "microphone"], type="filepath", label="Reference Audio File", value=None)
-            exaggeration = gr.Slider(0.25, 2, step=.05, label="Exaggeration (Neutral = 0.5, extreme values can be unstable)", value=.5)
-            # cfg_weight = gr.Slider(0.0, 1, step=.05, label="CFG/Pace", value=0.5)
 
             with gr.Accordion("More options", open=False):
                 seed_num = gr.Number(value=0, label="Random seed (0 for random)")
-                diffusion_steps = gr.Slider(1, 15, step=1, label="Diffusion Steps (more = slower and higher quality)", value=10)
+                diffusion_steps = gr.Slider(1, 10, step=1, label="Diffusion Steps (turbo default: 2)", value=2)
                 temp = gr.Slider(0.05, 5, step=.05, label="temperature", value=.8)
-                min_p = gr.Slider(0.00, 1.00, step=0.01, label="min_p || Newer Sampler. Recommend 0.02 > 0.1. Handles Higher Temperatures better. 0.00 Disables", value=0.05)
-                top_p = gr.Slider(0.00, 1.00, step=0.01, label="top_p || Original Sampler. 1.0 Disables(recommended). Original 0.8", value=1.00)
+                top_k = gr.Slider(0, 5000, step=10, label="top_k", value=1000)
+                top_p = gr.Slider(0.00, 1.00, step=0.01, label="top_p", value=0.95)
                 repetition_penalty = gr.Slider(1.00, 2.00, step=0.1, label="repetition_penalty", value=1.2)
 
             run_btn = gr.Button("Generate", variant="primary")
@@ -96,12 +88,10 @@ with gr.Blocks() as demo:
         inputs=[
             text,
             ref_wav,
-            exaggeration,
             temp,
             seed_num,
-            #cfg_weight,
             diffusion_steps,
-            min_p,
+            top_k,
             top_p,
             repetition_penalty,
         ],

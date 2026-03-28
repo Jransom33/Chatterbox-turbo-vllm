@@ -1,0 +1,21 @@
+{
+    "activation_function": "gelu_new",
+    "architectures": ["ChatterboxT3"],
+    "attn_pdrop": 0.1,
+    "bos_token_id": 50256,
+    "embd_pdrop": 0.1,
+    "eos_token_id": 50256,
+    "hidden_size": 1024,
+    "initializer_range": 0.02,
+    "layer_norm_epsilon": 1e-05,
+    "model_type": "gpt2",
+    "n_ctx": 8196,
+    "n_embd": 1024,
+    "n_head": 16,
+    "n_layer": 24,
+    "n_positions": 8196,
+    "resid_pdrop": 0.1,
+    "torch_dtype": "bfloat16",
+    "use_cache": true,
+    "vocab_size": 50276
+}

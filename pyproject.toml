@@ -13,8 +13,9 @@ keywords = ["llm", "gpt", "cli", "tts", "chatterbox"]
 dependencies = [
     "torch",
     "torchaudio",
-    "transformers",
-    "tokenizers",
+    "transformers>=4.57.1,<5",
+    "tokenizers>=0.22.1,<0.23",
+    "huggingface-hub>=0.34.0,<1.0",
     "scipy",
     "numpy",
     "librosa",
@@ -22,17 +23,15 @@ dependencies = [
     "omegaconf",
     "conformer",
     "diffusers",
-    "vllm",
     "peft",
     "llvmlite>=0.44.0",
     "vllm==0.10.0",
     "gradio",
-    "spacy-pkuseg",
-    "pykakasi",
 ]
 
 [project.optional-dependencies]
 dev = ["build", "twine"]
+quantization = ["bitsandbytes>=0.42.0"]
 
 [tool.setuptools.dynamic]
 version = { file = ".latest-version.generated.txt" }

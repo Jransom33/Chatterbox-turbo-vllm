@@ -13,7 +13,8 @@ if __name__ == "__main__":
 
     model = ChatterboxTTS.from_pretrained(
         # Only allocate enough memory for a single request.
-        max_batch_size = 1,
+        # **Update max_batch_size to account for the amount of vram you have. (keep lower value (such as 10) if you have less vram like 8gb). Increase to improve speed for environments with more vram.
+        max_batch_size = 10,
         max_model_len = MAX_MODEL_LEN,
     )
 
@@ -24,12 +25,14 @@ if __name__ == "__main__":
     s3gen_ref, cond_emb = model.get_audio_conditionals(AUDIO_PROMPT_PATH)
 
     # Generate audio
-    cond_emb = model.update_exaggeration(cond_emb, exaggeration=0.5)
     audios = model.generate_with_conds(
         ["You are listening to a demo of the Chatterbox TTS model running on VLLM."],
         s3gen_ref=s3gen_ref,
         cond_emb=cond_emb,
-        min_p=0.1,
+        diffusion_steps=2,
+        top_p=0.95,
+        top_k=1000,
+        repetition_penalty=1.2,
     )
     print(f"[POST-GEN] GPU memory usage after generating audio: {torch.cuda.memory_allocated() / 1024**2:.2f} MB")
 
