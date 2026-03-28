@@ -92,6 +92,27 @@ if __name__ == "__main__":
             ta.save(f"test-{i}-{audio_idx}.mp3", audio, model.sr)
 ```
 
+# Tuning `max_batch_size`
+
+The `max_batch_size` parameter controls how much GPU memory is allocated to vLLM for the T3 speech token model. The GPU is shared between two models — **T3** (runs inside vLLM) and **S3Gen** (the waveform decoder, runs outside vLLM) — so this value determines the memory split between them.
+
+A higher `max_batch_size` gives vLLM more memory, which improves T3 inference speed and allows more concurrent requests. But setting it too high will leave insufficient memory for S3Gen, causing OOM errors.
+
+**Recommended values by VRAM:**
+
+| VRAM | `max_batch_size` |
+|---|---|
+| 8 GB | 15 |
+| 16 GB | 40 |
+| 24 GB | 80 |
+
+**Files to adjust:**
+
+- `benchmark.py` — for benchmarking throughput
+- `example-tts.py` — basic generation example
+- `example-tts-min-vram.py` — minimal VRAM example (uses lower values)
+- `gradio_tts_app.py` — Gradio web UI
+
 # Benchmarks
 
 To run a benchmark, tweak and run `benchmark.py`.  
