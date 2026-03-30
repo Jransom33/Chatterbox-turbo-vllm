@@ -1,6 +1,6 @@
 # Chatterbox Turbo TTS on vLLM
 
-> **IMPORTANT:** This project is a port of [Chatterbox Turbo](https://github.com/resemble-ai/chatterbox) to vLLM, built on top of the excellent [chatterbox-vllm](https://github.com/randombk/chatterbox-vllm) by [@randombk](https://github.com/randombk). The original chatterbox-vllm project ported the standard Chatterbox model to vLLM — this repo extends that work to support the newer **Chatterbox Turbo** model, which features a significantly faster S3Gen waveform decoder.
+> This project is a port of [Chatterbox Turbo](https://github.com/resemble-ai/chatterbox) to vLLM, built on top of the excellent [chatterbox-vllm](https://github.com/randombk/chatterbox-vllm) by [@randombk](https://github.com/randombk). The original chatterbox-vllm project ported the standard Chatterbox model to vLLM — this repo extends that work to support the newer **Chatterbox Turbo** model, which features a significantly faster S3Gen waveform decoder.
 
 - Improved performance and more efficient use of GPU memory.
 - Easier integration with state-of-the-art inference infrastructure.
