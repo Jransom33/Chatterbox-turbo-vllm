@@ -13,6 +13,7 @@ keywords = ["llm", "gpt", "cli", "tts", "chatterbox"]
 dependencies = [
     "torch",
     "torchaudio",
+    "setuptools<81",
     "transformers>=4.57.1,<5",
     "tokenizers>=0.22.1,<0.23",
     "huggingface-hub>=0.34.0,<1.0",
@@ -32,12 +33,22 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["build", "twine"]
 quantization = ["bitsandbytes>=0.42.0"]
+blackwell = ["torch>=2.7.1", "torchaudio>=2.7.1"]
 
 [tool.setuptools.dynamic]
 version = { file = ".latest-version.generated.txt" }
 
 [tool.setuptools.package-data]
 chatterbox_vllm = ["models/t3/*.json", "models/*/t3/*.json"]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128", extra = "blackwell" }]
+torchaudio = [{ index = "pytorch-cu128", extra = "blackwell" }]
 
 [build-system]
 requires = ["setuptools", "wheel"]
