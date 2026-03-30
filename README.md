@@ -54,6 +54,12 @@ source .venv/bin/activate
 uv sync
 ```
 
+**Blackwell GPUs (RTX 5090, etc.)** require PyTorch with CUDA 12.8 support. Use the `blackwell` extra:
+
+```
+uv sync --extra blackwell
+```
+
 The package should automatically download the correct model weights from the Hugging Face Hub.
 
 If you encounter CUDA issues, try resetting the venv and using `uv pip install -e .` instead of `uv sync`.
